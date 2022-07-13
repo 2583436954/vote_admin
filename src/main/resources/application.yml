@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: vote_admin
+  profiles:
+    active: dev

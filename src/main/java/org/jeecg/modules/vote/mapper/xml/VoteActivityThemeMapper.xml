@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.vote.mapper.VoteActivityThemeMapper">
+    <sql id="vatSql">
+        vat.id as vatId,
+        vat.activity_name  as vatActivityName,
+        vat.is_start as vatIsStart,
+        vat.is_deleted as vatIsDeleted,
+        vat.create_by as vatCreateBy,
+        vat.create_time as vatCreateTime,
+        vat.update_by as vatUpdateBy,
+        vat.update_time as vatUpdateTime,
+        vat.comment as vatComment
+    </sql>
+    <sql id="vacSql">
+        vac.id as vacId
+        ,vac.activity_theme_id as vacActivityThemeId
+        ,vac.phone as vacPhone
+        ,vac.sum_poll as vacSumPoll
+        ,vac.brief_introduction as vacBriefIntroduction
+        ,vac.address as vacAddress
+        ,vac.name as vacName
+        ,vac.audit_status as vacAuditStatus
+        ,vac.comment as vacComment
+        ,vac.create_by as vacCreateBy
+        ,vac.create_time as vacCreateTime
+        ,vac.update_by as vacUpdateBy
+        ,vac.update_time as vacUpdateTime
+        ,vac.number as vacNumber
+    </sql>
+    <sql id="viSql">
+        vi.id as viId
+        ,vi.pid as viPid
+        ,vi.img_url as viImgUrl
+    </sql>
+    <select id="getActivityThemeVo" resultMap="getActivityThemeVoMap">
+        select
+            <include refid="vatSql"></include>,
+            <include refid="vacSql"></include>,
+            <include refid="viSql"></include>
+        from
+            vote_activity_theme vat
+                LEFT JOIN
+            vote_activity_content vac
+        on
+            vat.id = vac.activity_theme_id
+        and
+            vac.is_deleted = '0'
+        and
+            vac.audit_status = '1'
+        left join
+            vote_image vi
+        on
+            vac.id = vi.pid
+        where
+            vat.is_start = '0'
+        and
+            vat.is_deleted = '0'
+        order by
+            vac.sum_poll
+        desc
+    </select>
+    <resultMap id="getActivityThemeVoMap" type="org.jeecg.modules.vote.vo.VoteActivityThemeVo">
+        <id property="id" column="vatId" ></id>
+        <result property="isStart" column="vatIsStart" ></result>
+        <result property="activityName" column="vatActivityName"></result>
+        <result property="comment" column="vatComment"></result>
+        <result property="createBy" column="vatCreateBy" ></result>
+        <result property="createTime" column="vatCreateTime"></result>
+        <result property="updateBy" column="vatUpdateBy"></result>
+        <result property="updateTime" column="vatUpdateTime"></result>
+        <collection property="voteActivityContentList" ofType="org.jeecg.modules.vote.vo.VoteActivityContentVo">
+            <result property="id" column="vacId"></result>
+            <result property="activityThemeId" column="vacActivityThemeId"></result>
+            <result property="phone" column="vacPhone"></result>
+            <result property="sumPoll" column="vacSumPoll"></result>
+            <result property="briefIntroduction" column="vacBriefIntroduction"></result>
+            <result property="address" column="vacAddress"></result>
+            <result property="name" column="vacName"></result>
+            <result property="auditStatus" column="vacAuditStatus"></result>
+            <result property="comment" column="vacComment"></result>
+            <result property="createBy" column="vacCreateBy"></result>
+            <result property="createTime" column="vacCreateTime"></result>
+            <result property="updateBy" column="vacUpdateBy"></result>
+            <result property="updateTime" column="vacUpdateTime"></result>
+            <result property="number" column="vacNumber"></result>
+            <collection property="voteImageList" ofType="org.jeecg.modules.vote.entity.VoteImage">
+                <id property="id" column="viId"></id>
+                <result property="pid" column="viPid"></result>
+                <result property="imgUrl" column="viImgUrl"></result>
+            </collection>
+        </collection>
+    </resultMap>
+</mapper>
