@@ -1,5 +1,7 @@
 package org.jeecg.modules.vote.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.jeecg.modules.vote.entity.VoteActivityContent;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.jeecg.modules.vote.entity.VoteCustomer;
@@ -18,4 +20,8 @@ public interface IVoteActivityContentService extends IService<VoteActivityConten
     VoteActivityContentVo getActivityContentById(String id);
 
     boolean goVote(VoteCustomer voteCustomer, VoteActivityContent voteActivityContent);
+
+    String getNumber();
+
+    IPage<VoteActivityContentVo> getPage(Page<VoteActivityContentVo> page, VoteActivityContent voteActivityContent);
 }

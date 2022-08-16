@@ -1,5 +1,7 @@
 package org.jeecg.modules.vote.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.jeecg.modules.vote.entity.VoteActivityContent;
 import org.jeecg.modules.vote.entity.VoteCustomer;
 import org.jeecg.modules.vote.mapper.VoteActivityContentMapper;
@@ -46,5 +48,15 @@ public class VoteActivityContentServiceImpl extends ServiceImpl<VoteActivityCont
         iVoteCustomerMapper.updateById(voteCustomerUpdate);
         iVoteActivityContentMapper.updateById(voteActivityContentUpdate);
         return true;
+    }
+
+    @Override
+    public String getNumber() {
+        return this.baseMapper.getNumber();
+    }
+
+    @Override
+    public IPage<VoteActivityContentVo> getPage(Page<VoteActivityContentVo> page, VoteActivityContent voteActivityContent) {
+        return this.baseMapper.getPage(page,voteActivityContent);
     }
 }

@@ -3,6 +3,14 @@ package org.jeecg.modules.system.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.constant.CommonConstant;
 import org.jeecg.common.exception.JeecgBootException;
@@ -11,6 +19,8 @@ import org.jeecg.common.util.CommonUtils;
 import org.jeecg.common.util.RestUtil;
 import org.jeecg.common.util.TokenUtils;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.util.HttpClientUtil;
+import org.jeecg.modules.vote.constant.UploadImageConstant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -62,60 +72,53 @@ public class CommonController {
     /**
      * 文件上传统一方法
      * @param request
-     * @param response
      * @return
      */
     @PostMapping(value = "/upload")
-    public Result<?> upload(HttpServletRequest request, HttpServletResponse response) {
+    public Result<?> upload(HttpServletRequest request) {
         Result<?> result = new Result<>();
-        String savePath = "";
-        String bizPath = request.getParameter("biz");
-
-        //LOWCOD-2580 sys/common/upload接口存在任意文件上传漏洞
-        if (oConvertUtils.isNotEmpty(bizPath) && (bizPath.contains("../") || bizPath.contains("..\\"))) {
-            throw new JeecgBootException("上传目录bizPath，格式非法！");
-        }
-
         MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
         // 获取上传文件对象
         MultipartFile file = multipartRequest.getFile("file");
-        if(oConvertUtils.isEmpty(bizPath)){
-            if(CommonConstant.UPLOAD_TYPE_OSS.equals(uploadType)){
-                //未指定目录，则用阿里云默认目录 upload
-                bizPath = "upload";
-                //result.setMessage("使用阿里云文件上传时，必须添加目录！");
-                //result.setSuccess(false);
-                //return result;
-            }else{
-                bizPath = "";
-            }
+        log.info("文件名称："+file.getOriginalFilename());
+        String fileName = file.getOriginalFilename();
+        String type = fileName.substring(fileName.lastIndexOf(".")+1);
+        if("jpg".equals(type)){
+            type = "jpeg";
         }
-        if(CommonConstant.UPLOAD_TYPE_LOCAL.equals(uploadType)){
-            //update-begin-author:lvdandan date:20200928 for:修改JEditor编辑器本地上传
-            savePath = this.uploadLocal(file,bizPath);
-            //update-begin-author:lvdandan date:20200928 for:修改JEditor编辑器本地上传
-            /**  富文本编辑器及markdown本地上传时，采用返回链接方式
-            //针对jeditor编辑器如何使 lcaol模式，采用 base64格式存储
-            String jeditor = request.getParameter("jeditor");
-            if(oConvertUtils.isNotEmpty(jeditor)){
-                result.setMessage(CommonConstant.UPLOAD_TYPE_LOCAL);
-                result.setSuccess(true);
-                return result;
-            }else{
-                savePath = this.uploadLocal(file,bizPath);
+        //创建HttpClient实例
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        //创建post方法连接实例，在post方法中传入待连接地址
+        HttpPost httpPost = new HttpPost(UploadImageConstant.UPLOAD_IMAGE_URL);
+        httpPost.addHeader(UploadImageConstant.IMAGE_TOKEN, UploadImageConstant.IMAGE_TOKEN_VALUE);
+        CloseableHttpResponse response = null;
+
+        try {
+            //设置请求参数（类似html页面中name属性）
+            MultipartEntityBuilder entity = MultipartEntityBuilder.create();
+            entity.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+            //内容类型，用于定义网络文件的类型和网页的编码，决定文件接收方将以什么形式、什么编码读取这个文件
+            ContentType OCTEC_STREAM = ContentType.create("image/"+type);
+            //添加文件
+            entity.addBinaryBody(UploadImageConstant.FILE_NAME, file.getBytes(), OCTEC_STREAM, fileName);
+
+            httpPost.setEntity(entity.build());
+            //发起请求，并返回请求响应
+            response = httpClient.execute(httpPost);
+
+            String uploadResult = EntityUtils.toString(response.getEntity(), "utf-8");
+
+            result = JSONObject.parseObject(uploadResult, Result.class);
+            log.info("返回值result是"+result);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                response.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            */
-        }else{
-            //update-begin-author:taoyan date:20200814 for:文件上传改造
-            savePath = CommonUtils.upload(file, bizPath, uploadType);
-            //update-end-author:taoyan date:20200814 for:文件上传改造
-        }
-        if(oConvertUtils.isNotEmpty(savePath)){
-            result.setMessage(savePath);
-            result.setSuccess(true);
-        }else {
-            result.setMessage("上传失败！");
-            result.setSuccess(false);
         }
         return result;
     }

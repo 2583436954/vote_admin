@@ -2,6 +2,8 @@ package org.jeecg.modules.vote.mapper;
 
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.jeecg.modules.vote.entity.VoteActivityContent;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -18,4 +20,8 @@ public interface VoteActivityContentMapper extends BaseMapper<VoteActivityConten
 
 
     VoteActivityContentVo getActivityContentById(String id);
+
+    String getNumber();
+
+    IPage<VoteActivityContentVo> getPage(Page<VoteActivityContentVo> page, VoteActivityContent voteActivityContent);
 }

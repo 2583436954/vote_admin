@@ -9,7 +9,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.modules.api.vo.Result;
+import org.jeecg.modules.vote.entity.VoteActivityTheme;
 import org.jeecg.modules.vote.entity.VoteCustomer;
 import org.jeecg.modules.vote.service.IVoteCustomerService;
 
@@ -62,8 +65,10 @@ public class VoteCustomerController {
 													 @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 													 @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 													 HttpServletRequest req) {
-
-		return Result.ok();
+		QueryWrapper<VoteCustomer> queryWrapper = QueryGenerator.initQueryWrapper(voteCustomer, req.getParameterMap());
+		Page<VoteCustomer> page = new Page<VoteCustomer>(pageNo, pageSize);
+		IPage<VoteCustomer> pageList = voteCustomerService.page(page, queryWrapper);
+		return Result.ok(pageList);
 	}
 	
 	/**

@@ -56,4 +56,38 @@
             <result property="imgUrl" column="viImgUrl"></result>
         </collection>
     </resultMap>
+
+    <select id="getNumber" resultType="java.lang.String">
+        select
+            max(number)
+        from
+            vote_activity_content
+        where
+            is_deleted = '0'
+    </select>
+    <select id="getPage" resultType="org.jeecg.modules.vote.vo.VoteActivityContentVo">
+        select vac.*,vat.activity_name as activityName ,group_concat(vi.img_url) as fileList
+        from
+            vote_activity_content vac
+        left join
+            vote_activity_theme vat
+        on
+            vac.activity_theme_id = vat.id
+        and
+            vat.is_deleted = '0'
+        left join
+            vote_image vi
+        on
+            vi.pid = vac.id
+
+        where
+            vac.is_deleted = '0'
+        group by
+            vac.id
+        order by
+            create_time desc
+
+
+    </select>
+
 </mapper>

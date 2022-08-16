@@ -1,5 +1,6 @@
 package org.jeecg.modules.vote.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.vote.constant.VoteActivityContentConstant;
 import org.jeecg.modules.vote.entity.VoteActivityContent;
+import org.jeecg.modules.vote.entity.VoteImage;
 import org.jeecg.modules.vote.service.IVoteActivityContentService;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -20,12 +23,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.vote.service.IVoteImageService;
+import org.jeecg.modules.vote.vo.VoteActivityContentVo;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
 import org.jeecg.common.system.base.controller.JeecgController;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +55,8 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 public class VoteActivityContentController extends JeecgController<VoteActivityContent, IVoteActivityContentService> {
 	@Autowired
 	private IVoteActivityContentService voteActivityContentService;
+	@Autowired
+	private IVoteImageService iVoteImageService;
 	
 	/**
 	 * 分页列表查询
@@ -62,27 +70,58 @@ public class VoteActivityContentController extends JeecgController<VoteActivityC
 	//@AutoLog(value = "活动内容-分页列表查询")
 	@ApiOperation(value="活动内容-分页列表查询", notes="活动内容-分页列表查询")
 	@GetMapping(value = "/list")
-	public Result<IPage<VoteActivityContent>> queryPageList(VoteActivityContent voteActivityContent,
+	public Result<IPage<?>> queryPageList(VoteActivityContent voteActivityContent,
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 								   HttpServletRequest req) {
-		QueryWrapper<VoteActivityContent> queryWrapper = QueryGenerator.initQueryWrapper(voteActivityContent, req.getParameterMap());
-		Page<VoteActivityContent> page = new Page<VoteActivityContent>(pageNo, pageSize);
-		IPage<VoteActivityContent> pageList = voteActivityContentService.page(page, queryWrapper);
+
+		Page<VoteActivityContentVo> page = new Page<VoteActivityContentVo>(pageNo, pageSize);
+		IPage<VoteActivityContentVo> pageList = voteActivityContentService.getPage(page, voteActivityContent);
 		return Result.OK(pageList);
 	}
 	
 	/**
 	 *   添加
 	 *
-	 * @param voteActivityContent
+	 * @param voteActivityContentVo
 	 * @return
 	 */
 	@AutoLog(value = "活动内容-添加")
 	@ApiOperation(value="活动内容-添加", notes="活动内容-添加")
 	@PostMapping(value = "/add")
-	public Result<String> add(@RequestBody VoteActivityContent voteActivityContent) {
-		voteActivityContentService.save(voteActivityContent);
+	public Result<String> add(@RequestBody VoteActivityContentVo voteActivityContentVo) {
+		VoteActivityContent voteActivityContent = new VoteActivityContent();
+		BeanUtils.copyProperties(voteActivityContentVo,voteActivityContent);
+		voteActivityContent.setSumPoll(0);
+		voteActivityContent.setAuditStatus(VoteActivityContentConstant.AUDIT_STATUS_PASS);
+		voteActivityContent.setIsDeleted(VoteActivityContentConstant.IS_DELETED_NO);
+		synchronized(VoteActivityContent.class){
+			String oldNumber = voteActivityContentService.getNumber();
+			if(oldNumber == null || "".equals(oldNumber)){
+				oldNumber = "1";
+			}else{
+				oldNumber = (Integer.parseInt(oldNumber) + 1) + "";
+			}
+			voteActivityContent.setNumber(oldNumber);
+			voteActivityContentService.save(voteActivityContent);
+		}
+		String fileList = voteActivityContentVo.getFileList();
+		String[] fileArr = fileList.split(",");
+		if(null != fileList && fileArr.length > 0){
+			//去保存图片 先删除 后保存
+			iVoteImageService.remove(new QueryWrapper<VoteImage>().eq("pid",voteActivityContent.getId()));
+			//去保存
+			List<VoteImage> voteImageList = new ArrayList<>();
+			for(String fileName : fileArr){
+				VoteImage voteImage = new VoteImage();
+				voteImage.setImgUrl(fileName);
+				voteImage.setPid(voteActivityContent.getId());
+				voteImageList.add(voteImage);
+			}
+			iVoteImageService.saveBatch(voteImageList);
+
+		}
+
 		return Result.OK("添加成功！");
 	}
 	

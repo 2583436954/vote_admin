@@ -133,7 +133,11 @@
 			<groupId>org.jeecgframework.jimureport</groupId>
 			<artifactId>jimureport-spring-boot-starter</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>4.5</version>
+		</dependency>
 
 
 	</dependencies>
@@ -362,6 +366,29 @@
 						<groupId>com.alibaba</groupId>
 					</exclusion>
 				</exclusions>
+			</dependency>
+			<!-- 二维码的生成 -->
+			<!-- https://mvnrepository.com/artifact/com.google.zxing/core -->
+			<dependency>
+				<groupId>com.google.zxing</groupId>
+				<artifactId>core</artifactId>
+				<version>3.3.3</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.google.zxing/javase -->
+			<dependency>
+				<groupId>com.google.zxing</groupId>
+				<artifactId>javase</artifactId>
+				<version>3.3.3</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>4.5</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpmime</artifactId>
+				<version>4.5</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

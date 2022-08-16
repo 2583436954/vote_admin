@@ -43,6 +43,7 @@ public class VoteActivityTheme implements Serializable {
 	/**是否开启活动 0开启 1关闭*/
 	@Excel(name = "是否开启活动 0开启 1关闭", width = 15)
     @ApiModelProperty(value = "是否开启活动 0开启 1关闭")
+    @Dict(dicCode = "is_start_value")
     private String isStart;
 	/**isDeleted*/
     @TableLogic

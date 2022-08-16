@@ -13,4 +13,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class VoteActivityContentVo extends VoteActivityContent {
     private List<VoteImage> voteImageList;
+    private String activityName;
+    private String fileList;
 }
